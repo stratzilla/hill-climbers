@@ -65,5 +65,4 @@ Some aspects of the program are hardcoded. You may wish to change some of these 
 | ---- | ----------------------------------- | ------- |
 | 11   | Dimensionality of problem           | `2`     |
 | 12   | How many moves to make per position | `4`     |
-| 13   | How big is the stochastic jump      | `1.0`   |
-| 14   | Min/max number of threads           | `1`, `8`|
+| 13   | Min/max number of threads           | `1`, `8`|
