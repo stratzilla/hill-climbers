@@ -279,7 +279,7 @@ int main (int argc, char* argv[]) {
 		default: std::cout << "Invalid function type." << std::endl; return 1; // invalid
 	}
 	functionType = choiceB; // init the function type
-	rBound = bound*0.10; // stochastic jump is 10% of bound
+	rBound = bound*0.01; // stochastic jump is 10% of bound
 	continuing = true;
 	for (unsigned int i = 0; i < choiceB; i++) {
 		pthread_create(&threads[i], NULL, &hillClimb, NULL);
