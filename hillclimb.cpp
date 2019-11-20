@@ -67,7 +67,7 @@ double griewankFunction(std::array<double, DIMENSIONS> p) {
 		sum += (std::pow(p[i],2) / 4000);
 		product += (std::cos(p[i] / std::sqrt(i)));
 	}
-	return (sum - product - 1);
+	return (sum - product + 1);
 }
 
 /**
