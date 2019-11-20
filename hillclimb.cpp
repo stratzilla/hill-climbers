@@ -10,7 +10,6 @@
 // to avoid magic numbers
 const static unsigned int DIMENSIONS = 2; // how many dimensions
 const static unsigned int NEIGHBORS = 4; // how many moves to make per position
-const static double R_BOUND = 1.00; // for stochastic summand
 const static unsigned int MIN_THREADS = 1, MAX_THREADS = 8; // range for threading
 
 // globals
@@ -21,6 +20,7 @@ volatile bool continuing; // for thread while loop
 pthread_mutex_t updateLock; // lock
 unsigned int functionType = 1; // what type of function to use
 double bound = 512.00; // bounds for function
+double rBound = bound * 0.10;
 
 // function declarations
 bool checkInBounds(std::array<double, DIMENSIONS>, int, int);
@@ -31,7 +31,15 @@ double sphereFunction(std::array<double, DIMENSIONS>);
 double griewankFunction(std::array<double, DIMENSIONS>);
 double rastriginFunction(std::array<double, DIMENSIONS>);
 double schwefelFunction(std::array<double, DIMENSIONS>);
+double dixonPriceFunction(std::array<double, DIMENSIONS>);
+double sumSquaresFunction(std::array<double, DIMENSIONS>);
+double sumDifferentPowersFunction(std::array<double, DIMENSIONS>);
 
+/**
+ * fitness evaluation driver
+ * @param p - the position to evaluate
+ * @return - the fitness
+ */
 double fitnessEvaluation(std::array<double, DIMENSIONS> p) {
 	switch(functionType) {
 		case 1: return eggHolderFunction(p);
@@ -39,8 +47,50 @@ double fitnessEvaluation(std::array<double, DIMENSIONS> p) {
 		case 3: return rastriginFunction(p);
 		case 4: return griewankFunction(p);
 		case 5: return sphereFunction(p);
+		case 6: return dixonPriceFunction(p);
+		case 7: return sumSquaresFunction(p);
+		case 8: return sumDifferentPowersFunction(p);
 		default: return 0.00; // should never get here
 	}
+}
+
+/**
+ * Sum of Different Powers evaluation function
+ * @param p - the position to evaluate
+ * @return - the fitness of that position
+ */
+double sumDifferentPowersFunction(std::array<double, DIMENSIONS> p) {
+	double sum = 0.00;
+	for (unsigned int i = 0; i < DIMENSIONS; i++) {
+		sum += std::pow(std::abs(p[i]), (i+1));
+	}
+	return sum;
+}
+
+/**
+ * Sum Squares evaluation function
+ * @param p - the position to evaluate
+ * @return - the fitness of that position
+ */
+double sumSquaresFunction(std::array<double, DIMENSIONS> p) {
+	double sum = 0.00;
+	for (unsigned int i = 0; i < DIMENSIONS; i++) {
+		sum += (i+1) * std::pow(p[i],2);
+	}
+	return sum;
+}
+
+/**
+ * Dixon-Price evaluation function
+ * @param p - the position to evaluate
+ * @return - the fitness of that position
+ */
+double dixonPriceFunction(std::array<double, DIMENSIONS> p) {
+	double sum = std::pow((p[0] - 1), 2);
+	for (unsigned int i = 1; i < DIMENSIONS; i++) {
+		sum += (i+1) * std::pow((2*std::pow(p[i],2) - p[i-1]),2);
+	}
+	return sum;
 }
 
 /**
@@ -62,10 +112,10 @@ double sphereFunction(std::array<double, DIMENSIONS> p) {
  * @return - the fitness of that position (lower is better)
  */
 double griewankFunction(std::array<double, DIMENSIONS> p) {
-	double sum = 0.00; double product = 0.00;
+	double sum = 0.00; double product = 1.00;
 	for (unsigned int i = 0; i < DIMENSIONS; i++) {
 		sum += (std::pow(p[i],2) / 4000);
-		product += (std::cos(p[i] / std::sqrt(i)));
+		product *= (std::cos(p[i] / std::sqrt(i+1)));
 	}
 	return (sum - product + 1);
 }
@@ -126,7 +176,7 @@ void* hillClimb(void* ignore) {
 		best = fitnessEvaluation(position); // find fitness of that position
 		while (checkInBounds(position, -bound, bound)) { // while the position is within bounds
 			for (unsigned int i = 0; i < NEIGHBORS; i++) { // four possible moves
-				stoch = getRandPosition(-R_BOUND, R_BOUND); // stochastic summand position -5..5
+				stoch = getRandPosition(-rBound, rBound); // stochastic summand position -5..5
 				std::array<double, DIMENSIONS> tempPos; // for adding
 				// add the stochastic element to the position
 				for (unsigned int j = 0; j < DIMENSIONS; j++) { tempPos[j] = stoch[j] + position[j]; }
@@ -223,9 +273,13 @@ int main (int argc, char* argv[]) {
 		case 3: bound = 5.12; break; // rastrigin
 		case 4: bound = 600.00; break; // griewank
 		case 5: bound = 5.12; break; // sphere
+		case 6: bound = 10; break; // dixon-price
+		case 7: bound = 10; break; // sum squares
+		case 8: bound = 1; break; // sum of different powers
 		default: std::cout << "Invalid function type." << std::endl; return 1; // invalid
 	}
-	functionType = choiceB;
+	functionType = choiceB; // init the function type
+	rBound = bound*0.10; // stochastic jump is 10% of bound
 	continuing = true;
 	for (unsigned int i = 0; i < choiceB; i++) {
 		pthread_create(&threads[i], NULL, &hillClimb, NULL);
