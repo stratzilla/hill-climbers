@@ -10,7 +10,7 @@ And execute as below:
 
 `$ ./hc <arg1> <arg2>`
 
-Where `<arg1>` is the function to minimize (`[1..5]`) and `<arg2>` is how many hill climbers (threads) to utilize within the range `[1..8]`.
+Where `<arg1>` is the function to minimize (`[1..8]`) and `<arg2>` is how many hill climbers (threads) to utilize within the range `[1..8]`.
 
 This program is multithreaded (up to eight threads) to expedite and improve finding the solution. This program also has no termination condition other than `SIGINT`: it will continue trying to find the global minimum until the user chooses to signal interrupt, at which point the best in run fitness and position is outputted to the user.
 
